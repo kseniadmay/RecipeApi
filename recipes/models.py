@@ -76,7 +76,7 @@ class Recipe(models.Model):
 
     # Метаданные
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Создано')
-    uploaded_at = models.DateTimeField(auto_now=True, verbose_name='Обновлено')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Обновлено')
 
     class Meta:
         verbose_name = 'Рецепт'
@@ -87,7 +87,7 @@ class Recipe(models.Model):
         return self.title
 
 
-class Ingredients(models.Model):
+class Ingredient(models.Model):
     """Ингредиент рецепта"""
 
     recipe = models.ForeignKey(
@@ -126,7 +126,7 @@ class Step(models.Model):
         verbose_name='Рецепт'
     )
     order = models.PositiveIntegerField(verbose_name='Порядок')
-    description = models.TextField(verbose_name='Описаине')
+    description = models.TextField(verbose_name='Описание')
 
     class Meta:
         verbose_name = 'Шаг'
