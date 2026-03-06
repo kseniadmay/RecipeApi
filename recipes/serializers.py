@@ -83,12 +83,12 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
         recipe = Recipe.objects.create(**validated_data)
 
         # Создаём ингредиенты
-        for ingredient_data in ingredients_data:
-            ingredient = Ingredient.objects.create(recipe=recipe, **ingredient_data)
+        for ingredient in ingredients_data:
+            Ingredient.objects.create(recipe=recipe, **ingredient)
 
         # Создаём шаги
-        for step_data in steps_data:
-            Step.objects.create(recipe=recipe, **step_data)
+        for step in steps_data:
+            Step.objects.create(recipe=recipe, **step)
         return recipe
 
     def update(self, instance, validated_data):
