@@ -111,6 +111,7 @@ class Ingredient(models.Model):
     class Meta:
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
+        ordering = ['name']
 
     def __str__(self):
         return f'{self.name} - {self.amount} {self.unit}'
@@ -131,6 +132,7 @@ class Step(models.Model):
     class Meta:
         verbose_name = 'Шаг'
         verbose_name_plural = 'Шаги'
+        ordering = ['order']
 
     def __str__(self):
         return f'Шаг {self.order}: {self.description[:50]}'
@@ -156,7 +158,7 @@ class Favorite(models.Model):
     class Meta:
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранное'
-        unique_together = ['user', 'recipe']
+        unique_together = ['user', 'recipe']  # Один пользователь может добавить рецепт в избранное только один раз
         ordering = ['-added_at']
 
     def __str__(self):
