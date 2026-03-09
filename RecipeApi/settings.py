@@ -169,7 +169,12 @@ SIMPLE_JWT = {
 }
 
 # CORS (разрешение запросов с других доменов/портов)
-CORS_ALLOW_ALL_ORIGINS = True  # В продакшене поменять на список разрешённых доменов
+CORS_ALLOW_ALL_ORIGINS = True
+# В продакшене заменить на:
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:3000",  # Если будет frontend
+#     "https://ваш_домен.com",
+# ]
 
 # Настройка Swagger для поддержки JWT-токенов. Позволяет в интерфейсе Swagger вставлять токен в поле "Authorize" и
 # автоматически добавлять заголовок Authorization: Bearer <token> к запросам
