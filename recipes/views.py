@@ -99,6 +99,91 @@ class RecipeViewSet(viewsets.ModelViewSet):
         serializer = RecipeListSerializer(recipes, many=True)
         return Response(serializer.data)
 
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def add_to_favorites(self, request, pk=None):
+        """Добавить рецепт в избранное"""
+
+        recipe = self.get_object()
+        favorite, created = Favorite.objects.get_or_create(user=request.user, recipe=recipe)
+
+        if created:
+            return Response({'detail': 'Рецепт добавлен в избранное'}, status=status.HTTP_201_CREATED)
+        return Response({'detail': 'Рецепт уже в избранном'}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['delete'], permission_classes=[IsAuthenticated])
+    def remove_from_favorites(self, request, pk=None):
+        """Удалить рецепт из избранного"""
+
+        recipe = self.get_object()
+
+        try:
+            favorite = Favorite.objects.get(user=request.user, recipe=recipe)
+            favorite.delete()
+            return Response({'detail': 'Рецепт удалён из избранного'}, status=status.HTTP_204_NO_CONTENT)
+        except Favorite.DoesNotExist:
+            return Response({'detail': 'Рецепт не найден в избранном'}, status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def favorites(self, request):
+        """Получить избранные рецепты пользователя"""
+
+        favorites = Favorite.objects.filter(user=request.user).select_related('recipe')
+        recipes = [favorite.recipe for favorite in favorites]
+
+        page = self.paginate_queryset(recipes)
+        if page is not None:
+            serializer = RecipeListSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = RecipeListSerializer(favorites, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def quick_recipes(self, request):
+        """Рецепты до 30 минут"""
+
+        recipes = self.queryset.filter(cook_time__lte=30)
+
+        page = self.paginate_queryset(recipes)
+        if page is not None:
+            serializer = RecipeListSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = RecipeListSerializer(recipes, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def easy_recipes(self, request):
+        """Простые рецепты"""
+
+        recipes = self.queryset.filter(difficulty='easy')
+
+        page = self.paginate_queryset(recipes)
+        if page is not None:
+            serializer = RecipeListSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = RecipeListSerializer(recipes, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def search_by_ingredient(self, request):
+        """Поиск рецептов по ингредиенту"""
+
+        ingredient = request.query_params.get('name', None)
+        if not ingredient:
+            return Response({'detail': 'Параметр "name" обязателен'}, status=status.HTTP_400_BAD_REQUEST)
+
+        recipes = self.queryset.filter(ingredients__name__icontains=ingredient).distinct()
+
+        page = self.paginate_queryset(recipes)
+        if page is not None:
+            serializer = RecipeListSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = RecipeListSerializer(recipes, many=True)
+        return Response(serializer.data)
+
 
 class FavoriteViewSet(viewsets.ModelViewSet):
     """CRUD API для избранного пользователя с ограничением доступа"""
