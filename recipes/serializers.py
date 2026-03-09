@@ -101,6 +101,7 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
         # Создаём шаги
         for step in steps_data:
             Step.objects.create(recipe=recipe, **step)
+
         return recipe
 
     def update(self, instance, validated_data):
@@ -134,6 +135,7 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
             instance.steps.all().delete()
             for step_data in steps_data:
                 Step.objects.create(recipe=instance, **step_data)
+
         return instance
 
     def validate_cook_time(self, value):

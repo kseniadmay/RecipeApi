@@ -33,7 +33,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
 
     # Фильтрация
-    filter_fields = RecipeFilter
+    filterset_class = RecipeFilter
 
     # Поиск
     search_fields = ('title', 'description', 'ingredients__name')
@@ -60,7 +60,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         """Разные разрешения для разных действий"""
 
-        if self.action == ['update', 'partial_update', 'destroy']:
+        if self.action in ['update', 'partial_update', 'destroy']:
             # Только автор может редактировать и удалять рецепты
             permission_classes = [IsAuthenticated, IsAuthorOrReadOnly]
         elif self.action == 'create':
@@ -135,7 +135,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             serializer = RecipeListSerializer(page, many=True)
             return self.get_paginated_response(serializer.data)
 
-        serializer = RecipeListSerializer(favorites, many=True)
+        serializer = RecipeListSerializer(recipes, many=True)
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'])

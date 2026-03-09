@@ -2,7 +2,7 @@ from rest_framework.pagination import PageNumberPagination
 
 
 class RecipePagination(PageNumberPagination):
-    """Погинация для рецептов"""
+    """Пагинация для рецептов"""
 
     page_size = 10
     page_size_query_param = 'page_size'

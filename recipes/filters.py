@@ -7,11 +7,11 @@ class RecipeFilter(filters.FilterSet):
 
     # Фильтр по времени приготовления
     cook_time_min = filters.NumberFilter(field_name='cook_time', lookup_expr='gte')
-    cook_time_max = filters.NumberFilter(full_field_name='cook_time', lookup_expr='lte')
+    cook_time_max = filters.NumberFilter(field_name='cook_time', lookup_expr='lte')
 
     # Фильтр по количеству порций
-    serving_min = filters.NumberFilter(field_name='servings', lookup_expr='gte')
-    serving_max = filters.NumberFilter(field_name='servings', lookup_expr='lte')
+    servings_min = filters.NumberFilter(field_name='servings', lookup_expr='gte')
+    servings_max = filters.NumberFilter(field_name='servings', lookup_expr='lte')
 
     # Фильтр по калориям
     calories_min = filters.NumberFilter(field_name='calories', lookup_expr='gte')
@@ -20,7 +20,7 @@ class RecipeFilter(filters.FilterSet):
     # Фильтр по автору
     author_username = filters.CharFilter(field_name='author__username', lookup_expr='iexact')
 
-    # Фильтр по категории
+    # Фильтр по категории (slug)
     category_slug = filters.CharFilter(field_name='category__slug', lookup_expr='iexact')
 
     class Meta:
