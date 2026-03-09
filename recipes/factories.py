@@ -10,10 +10,21 @@ class UserFactory(DjangoModelFactory):
 
     class Meta:
         model = User
+        skip_postgeneration_save = True  # Убирает warning от factory_boy при установке пароля
 
     username = factory.Sequence(lambda n: f'user{n}')
     email = factory.LazyAttribute(lambda obj: f'{obj.username}@example.com')
     password = factory.PostGenerationMethodCall('set_password', 'testpass123')
+
+
+class CategoryFactory(DjangoModelFactory):
+    """Фабрика для создания категорий"""
+
+    class Meta:
+        model = Category
+
+    name = factory.Sequence(lambda n: f'Категория {n}')
+    slug = factory.Sequence(lambda n: f'category-{n}')
 
 
 class RecipeFactory(DjangoModelFactory):

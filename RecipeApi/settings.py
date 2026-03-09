@@ -180,6 +180,7 @@ SWAGGER_SETTINGS = {
     },
     'USE_SESSION_AUTH': False,  # Убирает форму username/password
 }
+SWAGGER_USE_COMPAT_RENDERERS = False  # Убирает warning от drf-yasg при рендеринге документации
 
 # CORS (разрешение запросов с других доменов/портов)
 CORS_ALLOW_ALL_ORIGINS = True
