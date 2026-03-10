@@ -127,10 +127,11 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-# Для статических файлов (CSS, JS, изображения)
+# Для статических файлов
 STATIC_URL = 'static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'  # Создаём папку, куда собираются все статические файлы командой collectstatic
-                                        # (для продакшена, чтобы веб-сервер мог раздавать их напрямую)
+# Для продакшена
+if not DEBUG:                               # Создаём папку, куда собираются все статические файлы командой collectstatic
+    STATIC_ROOT = BASE_DIR / 'staticfiles'  # (для продакшена, чтобы веб-сервер мог раздавать их напрямую)
 
 # Для медиафайлов (загрузка пользователями)
 MEDIA_URL = 'media/'

@@ -25,6 +25,10 @@ __pycache__/
 .coverage
 htmlcov/
 
+# Git
+.git
+.gitignore
+
 # OS
 Thumbs.db
 
