@@ -176,8 +176,8 @@ API использует JWT (JSON Web Tokens) для аутентификаци
 
 ## Структура проекта
 ```
-RecipeApi/                # Корень репозитория
-├── RecipeApi/            # Django проект с настройками
+RecipeAPI/                # Корень репозитория
+├── RecipeAPI/            # Django проект с настройками
 ├── recipes/              # Основное приложение с логикой API
 │   ├── models.py         # Модели данных
 │   ├── serializers.py    # Сериализаторы DRF
