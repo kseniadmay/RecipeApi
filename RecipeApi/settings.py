@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 from pathlib import Path
 from decouple import config     # Читаем переменные из .env
 from datetime import timedelta  # Задаём срок жизни JWT-токенов
+import dj_database_url          # Подключаем для настройки базы данных через URL
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -207,3 +208,10 @@ CORS_ALLOW_ALL_ORIGINS = True
 #     "https://ваш_домен.com",
 # ]
 
+# Настройка базы данных для Railway
+# Если в окружении есть переменная DATABASE_URL, используем её для подключения к PostgreSQL
+if 'DATABASE_URL' in os.environ:
+    DATABASES['default'] = dj_database_url.config(
+        conn_max_age=600,         # время кэширования соединений (секунды)
+        conn_health_checks=True,  # включаем проверки "здоровья" соединений
+    )

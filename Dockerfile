@@ -13,11 +13,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Копируем весь проект
 COPY . .
 
-# Собираем статику
-RUN python manage.py collectstatic --noinput
+# Добавляем скрипт entrypoint для автоматической сборки статики
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
 # Открываем порт
 EXPOSE 8000
 
-# Команда запуска
-CMD ["gunicorn", "RecipeApi.wsgi:application", "--bind", "0.0.0.0:8000"]
+# Используем entrypoint для запуска
+CMD ["/app/entrypoint.sh"]
