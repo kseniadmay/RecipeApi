@@ -1,6 +1,5 @@
 # Environment
 .venv/
-.env
 
 # PyCharm
 .idea/
@@ -29,7 +28,7 @@ htmlcov/
 .git
 .gitignore
 
-# OS
+# misc
 Thumbs.db
-
 misc/
+gunicorn.ctl

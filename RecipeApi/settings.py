@@ -51,6 +51,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',  # Для поддержки CORS (разрешение запросов с других доменов/портов)
     'django.middleware.common.CommonMiddleware',
@@ -129,9 +130,15 @@ USE_TZ = True
 
 # Для статических файлов
 STATIC_URL = 'static/'
-# Для продакшена
-if not DEBUG:                               # Создаём папку, куда собираются все статические файлы командой collectstatic
-    STATIC_ROOT = BASE_DIR / 'staticfiles'  # (для продакшена, чтобы веб-сервер мог раздавать их напрямую)
+STATIC_ROOT = BASE_DIR / 'staticfiles'  # Создаём папку, куда собираются все статические файлы командой collectstatic
+                                        # (для продакшена, чтобы веб-сервер мог раздавать их напрямую)
+
+# Для разработки: берём статику прямо из проекта
+if DEBUG:
+    STATICFILES_DIRS = [BASE_DIR / 'static']
+
+# Для продакшена: использование WhiteNoise для раздачи статических файлов
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Для медиафайлов (загрузка пользователями)
 MEDIA_URL = 'media/'
