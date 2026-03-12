@@ -29,8 +29,9 @@ SECRET_KEY = config('SECRET_KEY')  # Берём SECRET_KEY из .env
 DEBUG = config('DEBUG', default=False, cast=bool)  # Берём DEBUG из .env, если его нет - ставим False, приводим к
                                                    # булевому типу
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')  # Берём разрешённые хосты из .env и
-                                                                                   # преобразуем в список
+ALLOWED_HOSTS = config('ALLOWED_HOSTS',
+                       default='localhost,127.0.0.1,recipeapi.up.railway.app'
+                       ).split(',')  # Берём разрешённые хосты из .env и преобразуем в список
 
 # Настройки безопасности для продакшена
 if not DEBUG:
@@ -126,18 +127,10 @@ else:
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',},
 ]
 
 # Internationalization
@@ -161,7 +154,9 @@ if DEBUG:
     STATICFILES_DIRS = [BASE_DIR / 'static']
 
 # Для продакшена: использование WhiteNoise для раздачи статических файлов
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+if not DEBUG:
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+    WHITENOISE_USE_FINDERS = True
 
 # Для медиафайлов (загрузка пользователями)
 MEDIA_URL = 'media/'
@@ -214,9 +209,9 @@ SWAGGER_SETTINGS = {
 SWAGGER_USE_COMPAT_RENDERERS = False  # Убирает warning от drf-yasg при рендеринге документации
 
 # CORS (разрешение запросов с других доменов/портов)
-CORS_ALLOW_ALL_ORIGINS = True
-# В продакшене заменить на:
-# CORS_ALLOWED_ORIGINS = [
-#     "http://localhost:3000",  # Если будет frontend
-#     "https://ваш_домен.com",
-# ]
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
+else:
+    CORS_ALLOWED_ORIGINS = [
+        'https://recipeapi.up.railway.app',
+    ]

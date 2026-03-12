@@ -1,6 +1,7 @@
 #!/bin/sh
 
 # Собираем статику
+python manage.py migrate --noinput
 python manage.py collectstatic --noinput
 
 # Запускаем Gunicorn
