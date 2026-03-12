@@ -1,8 +1,10 @@
 #!/bin/sh
 
-# Собираем статику
+# Применяем миграции
 python manage.py migrate --noinput
+
+# Собираем статику
 python manage.py collectstatic --noinput
 
 # Запускаем Gunicorn
-exec gunicorn RecipeAPI.wsgi:application --bind 0.0.0.0:8000
+exec gunicorn RecipeAPI.wsgi:application --bind 0.0.0.0:$PORT

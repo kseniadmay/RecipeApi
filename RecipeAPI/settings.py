@@ -107,7 +107,7 @@ if DEBUG:
             'NAME': config('DATABASE_NAME', default='recipe_db'),         # \
             'USER': config('DATABASE_USER', default='postgres'),          #  \
             'PASSWORD': config('DATABASE_PASSWORD', default='postgres'),  #   - Берём все переменные из .env
-            'HOST': config('DATABASE_HOST', default='localhost'),         #  /
+            'HOST': config('DATABASE_HOST', default='localhost'),         #  / локалка = localhost, контейнер = db
             'PORT': config('DATABASE_PORT', default='5432'),              # /
         }
     }
