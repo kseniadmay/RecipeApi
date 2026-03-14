@@ -9,12 +9,13 @@ https://docs.djangoproject.com/en/6.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
+
+import os
 import sys
 from pathlib import Path
 from decouple import config     # Читаем переменные из .env
 from datetime import timedelta  # Задаём срок жизни JWT-токенов
 import dj_database_url          # Подключаем для настройки базы данных через URL
-import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -220,11 +221,14 @@ else:
 # чтобы APIClient в pytest получал ожидаемые коды ответов (200, 201 и т.д.)
 # без перенаправления на https://testserver
 
-# Проверяем, что мы запускаем тесты через pytest
-RUNNING_TESTS = 'pytest' in sys.argv or os.environ.get('DJANGO_SETTINGS_MODULE', '').endswith('Test')
+# Определяем, что мы запускаем тесты
+RUNNING_TESTS = (
+        'pytest' in sys.argv or                # через команду pytest
+        os.environ.get('PYTEST_CURRENT_TEST')  # или pytest создаёт эту переменную
+)
 
-print('RUNNING_TESTS =', RUNNING_TESTS)
 if RUNNING_TESTS:
+    # Используем SQLite в памяти
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -232,9 +236,10 @@ if RUNNING_TESTS:
         }
     }
 
-    SECURE_SSL_REDIRECT = False  # Отключаем редирект на HTTPS для тестов
+    # Отключаем редирект на HTTPS и secure cookies
+    SECURE_SSL_REDIRECT = False
     SESSION_COOKIE_SECURE = False
     CSRF_COOKIE_SECURE = False
 
-    # Если нужно, разрешаем все CORS для тестов
+    # Разрешаем все CORS для тестов
     CORS_ALLOW_ALL_ORIGINS = True
