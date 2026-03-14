@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/6.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
-
+import sys
 from pathlib import Path
 from decouple import config     # Читаем переменные из .env
 from datetime import timedelta  # Задаём срок жизни JWT-токенов
@@ -215,3 +215,25 @@ else:
     CORS_ALLOWED_ORIGINS = [
         'https://recipeapi.up.railway.app',
     ]
+
+# Отключаем автоматический редирект на HTTPS во время запуска тестов,
+# чтобы APIClient в pytest получал ожидаемые коды ответов (200, 201 и т.д.)
+# без перенаправления на https://testserver
+
+# Проверяем, что мы запускаем тесты через pytest
+RUNNING_TESTS = 'pytest' in sys.argv or os.environ.get('DJANGO_SETTINGS_MODULE', '').endswith('Test')
+
+if RUNNING_TESTS:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': ':memory:',
+        }
+    }
+
+    SECURE_SSL_REDIRECT = False  # Отключаем редирект на HTTPS для тестов
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
+
+    # Если нужно, разрешаем все CORS для тестов
+    CORS_ALLOW_ALL_ORIGINS = True
