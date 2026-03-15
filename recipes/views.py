@@ -6,6 +6,9 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.models import User
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg.utils import swagger_auto_schema
+from django.views.decorators.cache import cache_page
+from django.core.cache import cache
+from django.utils.decorators import method_decorator
 
 from .models import Category, Recipe, Favorite
 from .serializers import CategorySerializer, RecipeListSerializer, RecipeDetailSerializer, FavoriteSerializer, \
@@ -23,6 +26,23 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
     # Создавать и редактировать категории могут только админы
     permission_classes = [IsAdminOrReadOnly]
+
+    # Кэшируем список категорий на 1 час (категории меняются редко)
+    @method_decorator(cache_page(60 * 60, key_prefix='category_list'))
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    def perform_create(self, serializer):
+        serializer.save()
+        cache.delete('category_list')
+
+    def perform_update(self, serializer):
+        serializer.save()
+        cache.delete('category_list')
+
+    def perform_destroy(self, instance):
+        instance.delete()
+        cache.delete('category_list')
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -56,6 +76,20 @@ class RecipeViewSet(viewsets.ModelViewSet):
         """Автоматически устанавливает текущего пользователя как автора нового рецепта"""
 
         serializer.save(author=self.request.user)
+        # Инвалидируем кэш при создании
+        cache.delete('recipe_list')
+
+    def perform_update(self, serializer):
+        serializer.save()
+        # Инвалидируем кэш при обновлении
+        cache.delete('recipe_list')
+        cache.delete(f'recipe_{self.kwargs["pk"]}')
+
+    def perform_destroy(self, instance):
+        instance.delete()
+        # Инвалидируем кэш при удалении
+        cache.delete('recipe_list')
+        cache.delete(f'recipe_{instance.pk}')
 
     def get_permissions(self):
         """Разные разрешения для разных действий"""
@@ -72,6 +106,30 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
         return [permission() for permission in permission_classes]
 
+    # Кэшируем список рецептов на 5 минут
+    @method_decorator(cache_page(60 * 5, key_prefix='recipe_list'))
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    # Кэшируем детали рецепта на 10 минут
+    def retrieve(self, request, *args, **kwargs):
+        recipe_id = kwargs.get('pk')
+        cache_key = f'recipe_{recipe_id}'
+
+        # Пытаемся получить из кэша
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return Response(cached_data)
+
+        # Если нет в кэше, получаем из БД
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+
+        # Сохраняем в кэш на 10 минут
+        cache.set(cache_key, serializer.data, timeout=60 * 10)
+
+        return Response(serializer.data)
+
     @action(detail=False, methods=['get'])
     def random(self, request):
         """Возвращает случайный рецепт, если рецептов нет - 404"""
@@ -80,14 +138,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if recipe:
             serializer = RecipeDetailSerializer(recipe)
             return Response(serializer.data)
-        return Response({'detail': "Рецепты не найдены!"}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'detail': 'Рецепты не найдены!'}, status=status.HTTP_404_NOT_FOUND)
 
     @action(detail=False, methods=['get'])
     def my_recipes(self, request):
         """Возвращает рецепты текущего пользователя с поддержкой пагинации"""
 
         if not request.user.is_authenticated:
-            return Response({'detail': "Требуется авторизация!"}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({'detail': 'Требуется авторизация!'}, status=status.HTTP_401_UNAUTHORIZED)
 
         recipes = self.queryset.filter(author=request.user)
         page = self.paginate_queryset(recipes)
@@ -138,6 +196,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
         serializer = RecipeListSerializer(recipes, many=True)
         return Response(serializer.data)
 
+    # Кэшируем быстрые рецепты
+    @method_decorator(cache_page(60 * 5, key_prefix='quick_recipes'))
     @action(detail=False, methods=['get'])
     def quick_recipes(self, request):
         """Рецепты до 30 минут"""
@@ -201,7 +261,7 @@ class FavoriteViewSet(viewsets.ModelViewSet):
 
         instance = self.get_object()
         self.perform_destroy(instance)
-        return Response({'detail': "Удалено из избранного!"}, status=status.HTTP_204_NO_CONTENT)
+        return Response({'detail': 'Удалено из избранного!'}, status=status.HTTP_204_NO_CONTENT)
 
 
 # swagger_auto_schema здесь используется, чтобы Swagger видел, какие данные принимает register.

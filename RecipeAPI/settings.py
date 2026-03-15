@@ -17,11 +17,18 @@ from decouple import config     # Читаем переменные из .env
 from datetime import timedelta  # Задаём срок жизни JWT-токенов
 import dj_database_url          # Подключаем для настройки базы данных через URL
 
+
+# ПУТЬ К КОРНЮ ПРОЕКТА
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
+
+
+# ОСНОВНЫЕ НАСТРОЙКИ БЕЗОПАСНОСТИ
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config('SECRET_KEY')  # Берём SECRET_KEY из .env
@@ -30,22 +37,30 @@ SECRET_KEY = config('SECRET_KEY')  # Берём SECRET_KEY из .env
 DEBUG = config('DEBUG', default=False, cast=bool)  # Берём DEBUG из .env, если его нет - ставим False, приводим к
                                                    # булевому типу
 
+
+# СПИСОК РАЗРЕШЁННЫХ ХОСТОВ
+
 ALLOWED_HOSTS = config('ALLOWED_HOSTS',
                        default='localhost,127.0.0.1,recipeapi.up.railway.app'
                        ).split(',')  # Берём разрешённые хосты из .env и преобразуем в список
 
-# Настройки безопасности для продакшена
+
+# НАСТРОЙКИ БЕЗОПАСНОСТИ ДЛЯ ПРОДАКШЕНА
+
 if not DEBUG:
-    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')  # Сообщает Django, что запрос был HTTPS до прокси (Railway)
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO',
+                               'https')  # Сообщает Django, что запрос был HTTPS до прокси (Railway)
 
-    SECURE_SSL_REDIRECT = True                  # Автоматически перенаправляет все HTTP-запросы на HTTPS
-    SESSION_COOKIE_SECURE = True                # Делает cookie сессий доступными только по HTTPS
-    CSRF_COOKIE_SECURE = True                   # То же самое для CSRF cookie
-    SECURE_BROWSER_XSS_FILTER = True            # Включает встроенный фильтр XSS в браузерах
-    SECURE_CONTENT_TYPE_NOSNIFF = True          # Запрещает браузеру угадывать тип контента
-    X_FRAME_OPTIONS = 'DENY'                    # Запрещает вставку сайта в iframe
+    SECURE_SSL_REDIRECT = True          # Автоматически перенаправляет все HTTP-запросы на HTTPS
+    SESSION_COOKIE_SECURE = True        # Делает cookie сессий доступными только по HTTPS
+    CSRF_COOKIE_SECURE = True           # То же самое для CSRF cookie
+    SECURE_BROWSER_XSS_FILTER = True    # Включает встроенный фильтр XSS в браузерах
+    SECURE_CONTENT_TYPE_NOSNIFF = True  # Запрещает браузеру угадывать тип контента
+    X_FRAME_OPTIONS = 'DENY'            # Запрещает вставку сайта в iframe
 
-# Application definition
+
+# ПРИЛОЖЕНИЯ DJANGO
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -64,9 +79,12 @@ INSTALLED_APPS = [
     'recipes',
 ]
 
+
+# MIDDLEWARE
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Раздача статики через WhiteNoise
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',  # Для поддержки CORS (разрешение запросов с других доменов/портов)
     'django.middleware.common.CommonMiddleware',
@@ -77,6 +95,9 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'RecipeAPI.urls'
+
+
+# НАСТРОЙКИ ШАБЛОНОВ
 
 TEMPLATES = [
     {
@@ -97,11 +118,12 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'RecipeAPI.wsgi.application'
 
-# Database
+
+# БАЗА ДАННЫХ
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 if DEBUG:
-    # локальная база PostgreSQL
+    # Локальная база PostgreSQL
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',                    # Используем PostgreSQL
@@ -124,17 +146,46 @@ else:
         )
     }
 
-# Password validation
+
+# НАСТРОЙКА КЭШИРОВАНИЯ ЧЕРЕЗ REDIS
+
+CACHES = {
+    'default': {
+        # Используем Redis как backend для кэша Django
+        'BACKEND': 'django_redis.cache.RedisCache',
+
+        # Адрес Redis-сервера (берётся из переменной окружения REDIS_HOST)
+        'LOCATION': f"redis://{config('REDIS_HOST', default='localhost')}:6379/1",
+
+        'OPTIONS': {
+            # Клиент для работы с Redis через django-redis
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        },
+
+        # Префикс для ключей кэша (позволяет избежать конфликтов с другими проектами)
+        'KEY_PREFIX': 'RecipeAPI',
+
+        # Время хранения данных в кэше по умолчанию (в секундах)
+        'TIMEOUT': 300,  # 5 минут
+    }
+}
+
+# Время жизни кэшированных данных (используется в приложении)
+CACHE_TTL = 60 * 5  # 5 минут
+
+
+# ВАЛИДАТОРЫ ПАРОЛЯ
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',},
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator', },
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator', },
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator', },
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator', },
 ]
 
-# Internationalization
+
+# ЛОКАЛИЗАЦИЯ
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
 LANGUAGE_CODE = 'ru-ru'
@@ -142,10 +193,10 @@ TIME_ZONE = 'Europe/Moscow'
 USE_I18N = True
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
+
+# ДЛЯ СТАТИЧЕСКИХ ФАЙЛОВ
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-# Для статических файлов
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'  # Создаём папку, куда собираются все статические файлы командой collectstatic
                                         # (для продакшена, чтобы веб-сервер мог раздавать их напрямую)
@@ -159,13 +210,17 @@ if not DEBUG:
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
     WHITENOISE_USE_FINDERS = True
 
-# Для медиафайлов (загрузка пользователями)
+
+# ДЛЯ МЕДИАФАЙЛОВ (ЗАГРУЗКА ПОЛЬЗОВАТЕЛЯМИ)
+
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'  # Создаём папку, куда сохраняются загруженные пользователями файлы
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'  # По умолчанию будет создаваться первичный ключ для новых моделей
 
-# Настройка Django REST Framework для работы с API
+
+# НАСТРОЙКА DJANGO REST FRAMEWORK ДЛЯ РАБОТЫ С API
+
 REST_FRAMEWORK = {
     # Как пользователи будут аутентифицироваться
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -180,7 +235,9 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10,  # На одной странице будет 10 объектов
 }
 
-# JWT-аутентификация (JSON Web Tokens)
+
+# JWT-АУТЕНТИФИКАЦИЯ (JSON Web Tokens)
+
 SIMPLE_JWT = {
     # Сколько будет жить access-токен (для запросов к API)
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),  # 1 час
@@ -194,6 +251,9 @@ SIMPLE_JWT = {
     # Добавлять старые refresh-токены в черный список после обновления
     'BLACKLIST_AFTER_ROTATION': True,  # True - блокируем старые refresh-токены
 }
+
+
+# SWAGGER ДЛЯ JWT
 
 # Настройка Swagger для поддержки JWT-токенов. Позволяет в интерфейсе Swagger вставлять токен в поле "Authorize" и
 # автоматически добавлять заголовок Authorization: Bearer <token> к запросам
@@ -217,10 +277,11 @@ else:
         'https://recipeapi.up.railway.app',
     ]
 
-# Отключаем автоматический редирект на HTTPS во время запуска тестов,
-# чтобы APIClient в pytest получал ожидаемые коды ответов (200, 201 и т.д.)
-# без перенаправления на https://testserver
 
+# ТЕСТОВОЕ ОКРУЖЕНИЕ
+
+# Отключаем автоматический редирект на HTTPS во время запуска тестов, чтобы APIClient в pytest получал ожидаемые коды
+# ответов (200, 201 и т.д.) без перенаправления на https://testserver
 # Определяем, что мы запускаем тесты
 RUNNING_TESTS = (
         'pytest' in sys.argv or                # через команду pytest
